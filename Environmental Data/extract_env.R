@@ -82,6 +82,19 @@ for (j in 1:6) {
     write.csv(extracted_data, new_file_name, row.names = FALSE)
 }
 
+########################################################################
+##################### calculate tas and pr mean values ###################
+allbirds_tas<- read.csv("tas.combined.csv",header=T,sep=',')
+allbirds_pr <- read.csv("pr.combined.csv",header=T,sep=',')
+tas_mean <- aggregate(allbirds_tas[,6],list(allbirds_tas$species),mean,na.rm=TRUE, na.action=na.pass)
+pr_mean <- aggregate(allbirds_pr[,6],list(allbirds_pr$species),mean,na.rm=TRUE, na.action=na.pass)
+colnames(tas_mean)[1] <- "species"
+colnames(tas_mean)[2] <- "temperature"
+colnames(pr_mean)[1] <- "species"
+colnames(pr_mean)[2] <- "precipitation"
+write.csv(tas_mean, "Tas_Mean_Data.csv", row.names = FALSE)
+write.csv(pr_mean, "Pr_Mean_Data.csv", row.names = FALSE)
+
 
 ########################################################################
 ####################### extract elevation data #########################
