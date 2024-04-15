@@ -31,7 +31,7 @@ for (i in 1:360) {
 }
 
 ########################################################################
-################### extract CHELSA data by month avg ###################
+################### extract temperature by month avg ###################
 
 ### loop through all years for all month
 for (j in 1:12) {
@@ -48,6 +48,40 @@ for (j in 1:12) {
   write.csv(extracted_data, new_file_name, row.names = FALSE)
   }
 }
+
+
+####################### extract precipitation data #########################
+
+### loop through all years for all month
+for (j in 1:12) {
+  for (i in 1990:2018) {
+    ras_name <- paste0("CHELSA/pr/CHELSA_pr_",sprintf("%02d",j),"_", i, "_V.2.1.tif")
+    pr <- raster(ras_name)
+    occur_name<- paste0("Occurrence_Data/month/occurrence_",j,"_", i, ".csv")
+    records<- read.csv(occur_name, header=T,sep=',')
+    coordinates<- data.frame(records[,"decimalLongitude"],records[,"decimalLatitude"])
+    value <- extract(pr,coordinates,method='bilinear',df=TRUE)
+    value$precip <- value[,2] * 0.1
+    extracted_data <- data.frame(records,value$precip)
+    new_file_name <- paste0("Occurrence_Data/pr_data/pr_",sprintf("%02d",j),"/pr_",sprintf("%02d",j),"_", i, "_data.csv")
+    write.csv(extracted_data, new_file_name, row.names = FALSE)
+  }
+}
+
+#### a seprate loop for 2019 because it only has six months data
+for (j in 1:6) {
+    ras_name <- paste0("CHELSA/pr/CHELSA_pr_0",j,"_2019_V.2.1.tif")
+    pr <- raster(ras_name)
+    occur_name<- paste0("Occurrence_Data/month/occurrence_",j,"_2019.csv")
+    records<- read.csv(occur_name, header=T,sep=',')
+    coordinates<- data.frame(records[,"decimalLongitude"],records[,"decimalLatitude"])
+    value <- extract(pr,coordinates,method='bilinear',df=TRUE)
+    value$precip <- value[,2] * 0.1
+    extracted_data <- data.frame(records,value$precip)
+    new_file_name <- paste0("Occurrence_Data/pr_data/pr_0",j,"/pr_0",j,"_2019_data.csv")
+    write.csv(extracted_data, new_file_name, row.names = FALSE)
+}
+
 
 ########################################################################
 ####################### extract elevation data #########################
