@@ -5,64 +5,46 @@ library(patchwork)
 
 ### get coordianates from tas data file
 allbirds_tas<- read.csv("tas.combined.csv",header=T,sep=',')
-allbirds_pr<- read.csv("pr.combined.csv",header=T,sep=',')
-bird_coor <- data.frame(allbirds_tas[,"lon"],allbirds_tas[,"lat"])
+temp_coor <- data.frame(allbirds_tas[,"decimalLongitude"],allbirds_tas[,"decimalLatitude"])
 
 ########################################################################
 ##################### exatract from annual variables ###################
 
 temp_raster<- raster("CHELSA/CHELSA_bio1_1981-2010_V.2.1_temperature.tif")
-rain_raster<- raster("CHELSA/CHELSA_bio12_1981-2010_V.2.1_precipitation.tif")
-
-temp <- extract(temp_raster,bird_coor,method='bilinear',df=TRUE)
-temp$temperature <- temp$CHELSA_bio1_1981.2010_V.2.1_temperature * 0.1 - 273.5
-rain <- extract(rain_raster,bird_coor,method='bilinear',df=TRUE)
-rain$precipitation <- rain$CHELSA_bio12_1981.2010_V.2.1_precipitation * 0.1
-bird_annual_Data<- data.frame(allbirds_tas[,"species"],bird_coor,temp$temperature,rain$precipitation)
-
-#### calculate mean values for all birds
-temp_mean <- aggregate(bird_annual_Data[,5],list(bird_annual_Data$species),mean,na.rm=TRUE, na.action=na.pass)
-precip_mean <- aggregate(bird_annual_Data[,6],list(bird_annual_Data$species),mean,na.rm=TRUE, na.action=na.pass)
+temp <- extract(temp_raster,temp_coor,method='bilinear',df=TRUE)
+temp$temperature <- temp$CHELSA_bio1_1981.2010_V.2.1_temperature * 0.1 - 273.15
+bird_annual_temp<- data.frame(allbirds_tas[,"species"],temp_coor,temp$temperature)
+temp_mean <- aggregate(bird_annual_temp[,4],list(bird_annual_temp[,1]),mean,na.rm=TRUE, na.action=na.pass)
 colnames(temp_mean)[1] <- "species"
 colnames(temp_mean)[2] <- "temperature"
-colnames(precip_mean)[1] <- "species"
-colnames(precip_mean)[2] <- "precipitation"
 write.csv(temp_mean, "Temperature_annual_mean.csv", row.names = FALSE)
-write.csv(precip_mean, "Precipitation_annual_mean.csv", row.names = FALSE)
+
 
 ####################### testing on two species ####################
 
 #### resident bird Copsychus saularis
-data1<- bird_annual_Data[bird_annual_Data$species == "Copsychus saularis",]
-data2<- allbirds_tas[allbirds_tas$species == "Copsychus saularis",]
+#### migratory bird Muscicapa sibirica
+
+allbirds_tas<- read.csv("Occurrence_Data/tas.combined.csv",header=T,sep=',')
+data1<- bird_annual_temp[bird_annual_temp[,1] == "Copsychus saularis" | bird_annual_temp[,1] == "Muscicapa sibirica",]
+data2<- allbirds_tas[allbirds_tas$species == "Copsychus saularis" | allbirds_tas$species == "Muscicapa sibirica",]
 data1$type<- "annual"
 data2$type <- "monthly"
-dat1<- select(data1,temp.temperature,rain.precipitation,type)
-colnames(dat1)[1]<- "tas"
-colnames(dat1)[2]<- "pr"
-dat2<-select(data2,tas,pr,type)
-plot_dat1<- rbind(dat1,dat2)
-p1<- ggplot(plot_dat, aes(x=type, y=tas)) + geom_boxplot()
-p2<- ggplot(plot_dat, aes(x=type, y=pr)) + geom_boxplot()
+dat1<- select(data1,allbirds_tas....species..,temp.temperature,type)
+colnames(dat1)[1]<- "species"
+colnames(dat1)[2]<- "tas"
 
-#### migratory bird Muscicapa sibirica
-data3<- bird_annual_Data[bird_annual_Data$species == "Muscicapa sibirica",]
-data4<- allbirds_tas[allbirds_tas$species == "Muscicapa sibirica",]
-data3$type<- "annual"
-data4$type <- "monthly"
-dat3<- select(data3,temp.temperature,rain.precipitation,type)
-colnames(dat3)[1]<- "tas"
-colnames(dat4)[2]<- "pr"
-dat4<-select(data4,tas,pr,type)
-plot_dat2<- rbind(dat3,dat4)
-p3<- ggplot(plot_dat2, aes(x=type, y=tas)) + geom_boxplot()
-p4<- ggplot(plot_dat2, aes(x=type, y=pr)) + geom_boxplot()
+dat2<-select(data2,species,tas,type)
+plot_dat<- rbind(dat1,dat2)
+p1<- ggplot(plot_dat, aes(x=species, y=tas, fill=type)) + geom_boxplot() + scale_fill_manual(values = c("#0072B2", "#E69F00"))
 
 #### plot mean values comparison across all species
-tas_mean<- read.csv("Tas_Mean_Data.csv",header=T,sep=',')
-df<- merge(temp_mean,tas_mean,by="species")
-p5<- ggplot(df, aes(x = species)) + 
-  geom_line(aes(x = species, y = temperature), color="blue", size=2) + 
-  geom_line(aes(x = species, y = temperature), color="red", size=2)
+df<- read.csv(file="Occurrence_Data/test_on_annual/test_on_annual.csv",header=T,sep=",")
+p2<- ggplot(df, aes(x = move, y = temperature, fill=type)) + geom_boxplot() + scale_fill_manual(values = c("#0072B2", "#E69F00"))
+
+pdf("./boxplot.pdf", width = 12, height = 5)
+p1 + p2
+dev.off()
+
 
 
