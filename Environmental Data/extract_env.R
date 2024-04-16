@@ -42,7 +42,7 @@ for (j in 1:12) {
   records<- read.csv(occur_name, header=T,sep=',')
   coordinates<- data.frame(records[,"decimalLongitude"],records[,"decimalLatitude"])
   value <- extract(tas,coordinates,method='bilinear',df=TRUE)
-  value$temperature <- value[,2] * 0.1 - 273.5
+  value$temperature <- value[,2] * 0.1 - 273.15
   extracted_data <- data.frame(records,value$temperature)
   new_file_name <- paste0("tas_",sprintf("%02d",j),"/tas_",sprintf("%02d",j),"_", i, "_data.csv")
   write.csv(extracted_data, new_file_name, row.names = FALSE)
