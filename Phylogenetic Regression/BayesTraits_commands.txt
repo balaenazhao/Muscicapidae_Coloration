@@ -1,0 +1,14 @@
+6
+2
+BurnIn 1000000
+Iterations 11000000
+Sample 10000
+Prior Beta-2 uniform -10 10
+Prior Beta-3 uniform -10 10
+Prior Beta-4 uniform -10 10
+Prior Beta-5 uniform -10 10
+Prior Beta-6 uniform -10 10
+Prior Beta-7 uniform -10 10
+Prior Beta-8 uniform -10 10
+Stones 100 10000
+RUN
